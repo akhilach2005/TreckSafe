@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "TrailSafe",
+    "slug": "trailsafe",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "TrailSafe needs your location to assess current environmental safety conditions."
+      }
+    },
+    "android": {
+      "package": "com.axe12.trailsafe",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "TrailSafe needs your location to assess current environmental safety conditions."
+        }
+      ]
+    ],
+    "scheme": "trailsafe",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c147afd4-9de4-43e8-b3cb-3a57ded20e7f"
+      }
+    },
+    "owner": "axee"
+  }
+}

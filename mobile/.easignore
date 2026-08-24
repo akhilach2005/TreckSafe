@@ -1,0 +1,15 @@
+node_modules/
+.expo/
+.git/
+.claude/
+
+Expo-Go-57.0.9.apk
+*.apk
+*.aab
+
+dist/
+build/
+coverage/
+
+*.log
+npm-debug.log*
