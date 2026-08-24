@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>TrailSafe | Outdoor Safety Assessment</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #08131f;
+      color: #f8fafc;
+      line-height: 1.6;
+    }
+
+    /* Navigation */
+
+    nav {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 8%;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 0;
+      background: rgba(8, 19, 31, 0.92);
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    nav a {
+      color: #cbd5e1;
+      text-decoration: none;
+      margin-left: 22px;
+      font-size: 15px;
+    }
+
+    nav a:hover {
+      color: #38bdf8;
+    }
+
+    /* Hero */
+
+    .hero {
+      min-height: 82vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 80px 8%;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 850px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 30px;
+      color: #7dd3fc;
+      background: rgba(56, 189, 248, 0.08);
+      margin-bottom: 25px;
+      font-size: 14px;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 7vw, 78px);
+      line-height: 1.1;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 span {
+      color: #38bdf8;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: 0 auto;
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    .buttons {
+      margin-top: 35px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.25s;
+    }
+
+    .primary-btn {
+      background: #38bdf8;
+      color: #06121c;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
+
+    .secondary-btn {
+      border: 1px solid #334155;
+      color: #e2e8f0;
+    }
+
+    .secondary-btn:hover {
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
+    /* Sections */
+
+    section {
+      padding: 90px 8%;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .section-title h2 {
+      font-size: 38px;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: #94a3b8;
+      max-width: 650px;
+      margin: auto;
+    }
+
+    /* Features */
+
+    .features {
+      background: #0b1726;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      max-width: 1150px;
+      margin: auto;
+    }
+
+    .feature-card {
+      background: #101f31;
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      transition: 0.25s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .feature-icon {
+      font-size: 30px;
+      margin-bottom: 15px;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 10px;
+      font-size: 19px;
+    }
+
+    .feature-card p {
+      color: #94a3b8;
+      font-size: 15px;
+    }
+
+    /* Screenshots */
+
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .screenshot {
+      background: #101f31;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .screenshot img {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+    }
+
+    /* Tech stack */
+
+    .tech {
+      background: #0b1726;
+    }
+
+    .tech-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .tech-item {
+      padding: 12px 20px;
+      background: #101f31;
+      border: 1px solid #1e3a4f;
+      border-radius: 30px;
+      color: #cbd5e1;
+    }
+
+    /* CTA */
+
+    .cta {
+      text-align: center;
+    }
+
+    .cta-box {
+      max-width: 850px;
+      margin: auto;
+      padding: 60px 30px;
+      background: linear-gradient(
+        135deg,
+        rgba(56, 189, 248, 0.14),
+        rgba(14, 165, 233, 0.04)
+      );
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 25px;
+    }
+
+    .cta h2 {
+      font-size: 36px;
+      margin-bottom: 15px;
+    }
+
+    .cta p {
+      color: #94a3b8;
+      margin-bottom: 28px;
+    }
+
+    /* Footer */
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    /* Responsive */
+
+    @media (max-width: 800px) {
+
+      nav {
+        padding: 18px 6%;
+      }
+
+      nav .nav-links {
+        display: none;
+      }
+
+      .hero {
+        min-height: 75vh;
+      }
+
+      section {
+        padding: 70px 6%;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .screenshots-grid {
+        grid-template-columns: 1fr;
+        max-width: 350px;
+      }
+
+      .section-title h2,
+      .cta h2 {
+        font-size: 30px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation -->
+
+  <nav>
+    <div class="logo">TreckSafe</div>
+
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#screenshots">App Preview</a>
+      <a href="#tech">Tech Stack</a>
+    </div>
+  </nav>
+
+
+  <!-- Hero -->
+
+  <section class="hero">
+
+    <div class="hero-content">
+
+      <div class="badge">
+        Check Outdoor Safety before or during your trecking/running activities
+      </div>
+
+      <h1>
+        Know the conditions.
+        <br />
+        <span>Stay safer outdoors.</span>
+      </h1>
+
+      <p>
+        TrailSafe helps hikers and runners assess environmental conditions
+        using location and real-time weather data before heading outdoors.
+      </p>
+
+      <div class="buttons">
+
+        <!-- APK DOWNLOAD LINK -->
+        <a
+          href="https://expo.dev/accounts/axee/projects/trailsafe/builds/73e274f8-b68e-496b-8166-1a4122efb410"
+          target="_blank"
+          rel="noopener"
+          class="btn primary-btn"
+        >
+          📱 Download Android App
+        </a>
+
+        <!-- CHANGE THIS TO YOUR GITHUB REPOSITORY -->
+        <a
+          href="https://github.com/akhilach2005/TreckSafe"
+          target="_blank"
+          rel="noopener"
+          class="btn secondary-btn"
+        >
+          💻 View Source Code
+        </a>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- Features -->
+
+  <section class="features" id="features">
+
+    <div class="section-title">
+      <h2>Designed for Safer Outdoor Decisions</h2>
+
+      <p>
+        Environmental data is analyzed to provide a simple safety assessment
+        before you start your activity.
+      </p>
+    </div>
+
+    <div class="feature-grid">
+
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+
+        <h3>Location-Based Analysis</h3>
+
+        <p>
+          Uses GPS location to retrieve environmental conditions
+          for your current area.
+        </p>
+      </div>
+
+
+      <div class="feature-card">
+        <div class="feature-icon">🌡️</div>
+
+        <h3>Weather & Heat Analysis</h3>
+
+        <p>
+          Evaluates factors such as temperature, humidity,
+          heat index, wind, and precipitation.
+        </p>
+      </div>
+
+
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+
+        <h3>Safety Score</h3>
+
+        <p>
+          Combines multiple environmental factors into
+          an easy-to-understand safety assessment.
+        </p>
+      </div>
+
+
+      <div class="feature-card">
+        <div class="feature-icon">💧</div>
+
+        <h3>Hydration Guidance</h3>
+
+        <p>
+          Provides hydration recommendations based on
+          environmental conditions and activity.
+        </p>
+      </div>
+
+
+      <div class="feature-card">
+        <div class="feature-icon">🥾</div>
+
+        <h3>Activity Specific</h3>
+
+        <p>
+          Supports separate assessments for outdoor
+          hiking and running activities.
+        </p>
+      </div>
+
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+
+        <h3>Real-Time Results</h3>
+
+        <p>
+          Connects the mobile application with a backend
+          safety engine and live weather information.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- Screenshots -->
+
+  <section id="screenshots">
+
+    <div class="section-title">
+      <h2>See the App in Action</h2>
+
+      <p>
+        A simple mobile experience for checking outdoor conditions
+        and understanding potential environmental risks.
+      </p>
+    </div>
+
+    <div class="screenshots-grid">
+
+      <!-- Replace these image paths with your screenshots -->
+
+      <div class="screenshot">
+        <img
+          src="images/screenshot1.jpeg"
+          alt="TrailSafe app home screen"
+        />
+      </div>
+
+      <div class="screenshot">
+        <img
+          src="images/screenshot2.jpeg"
+          alt="TrailSafe activity selection"
+        />
+      </div>
+
+      <div class="screenshot">
+        <img
+          src="images/screenshot3.jpeg"
+          alt="TrailSafe safety assessment result"
+        />
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- Tech Stack -->
+
+  <section class="tech" id="tech">
+
+    <div class="section-title">
+      <h2>Built With</h2>
+
+      <p>
+        A full-stack mobile application combining real-time environmental data
+        with a rule-based safety assessment engine.
+      </p>
+    </div>
+
+    <div class="tech-list">
+
+      <div class="tech-item">React Native</div>
+      <div class="tech-item">Expo</div>
+      <div class="tech-item">TypeScript</div>
+      <div class="tech-item">Node.js</div>
+      <div class="tech-item">Express.js</div>
+      <div class="tech-item">Open-Meteo API</div>
+      <div class="tech-item">Render</div>
+      <div class="tech-item">EAS Build</div>
+
+    </div>
+
+  </section>
+
+
+  <!-- Download CTA -->
+
+  <section class="cta">
+
+    <div class="cta-box">
+
+      <h2>Ready to Check Outdoor Conditions?</h2>
+
+      <p>
+        Download the Android application and try the safety assessment yourself.
+      </p>
+
+      <a
+        href="https://expo.dev/accounts/axee/projects/trailsafe/builds/73e274f8-b68e-496b-8166-1a4122efb410"
+        target="_blank"
+        class="btn primary-btn"
+        rel="noopener"
+      >
+        📱 Download the App
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <!-- Footer -->
+
+  <footer>
+    © 2026 TrailSafe · Built as a full-stack outdoor safety assessment project
+  </footer>
+
+</body>
+</html>
