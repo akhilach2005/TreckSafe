@@ -1,103 +1,178 @@
+
 /**
  * TrailSafe Safety Service
  *
- * Core safety-scoring engine.
- * Computes individual risk scores per environmental factor,
- * applies configurable weights, applies activity adjustment,
- * determines risk level, and identifies the primary contributing factor.
+ * Core environmental safety-scoring engine.
  *
- * All scoring functions are exported individually for unit testing
- * with artificial values.
+ * The engine:
+ * 1. Scores individual environmental risks from 0–100.
+ * 2. Considers weather conditions such as rain and thunderstorms.
+ * 3. Uses both average wind speed and wind gusts.
+ * 4. Applies activity-specific adjustments.
+ * 5. Calculates a weighted overall environmental risk score.
+ * 6. Identifies the main factors contributing to the result.
  */
 
-const { WEIGHTS, RISK_LEVELS, ACTIVITY_MULTIPLIERS } = require('../config/safetyConfig');
+const {
+  WEIGHTS,
+  RISK_LEVELS,
+  ACTIVITY_FACTORS,
+} = require('../config/safetyConfig');
 
 // ─────────────────────────────────────────────
-// Individual Risk Scoring Functions (0–100)
-// Each function is independently testable.
+// Individual Risk Scoring Functions
 // ─────────────────────────────────────────────
 
 /**
- * Scores heat index risk (0–100).
- * Heat index has the highest weight (30%) in the engine.
+ * Scores heat-index risk.
+ *
  * @param {number} heatIndex - Heat index in °C
  * @returns {number}
  */
 function scoreHeatIndex(heatIndex) {
-  if (heatIndex < 27)  return 0;
-  if (heatIndex < 32)  return 20;
-  if (heatIndex < 38)  return 50;
-  if (heatIndex < 45)  return 75;
+  if (heatIndex < 27) return 0;
+  if (heatIndex < 32) return 15;
+  if (heatIndex < 38) return 40;
+  if (heatIndex < 45) return 70;
   return 100;
 }
 
 /**
- * Scores temperature risk (0–100).
+ * Scores temperature risk.
+ *
  * Both extreme cold and extreme heat increase risk.
+ *
  * @param {number} temperature - Temperature in °C
  * @returns {number}
  */
 function scoreTemperature(temperature) {
-  if (temperature < 0)   return 80;
-  if (temperature < 10)  return 50;
-  if (temperature < 15)  return 20;
-  if (temperature < 25)  return 0;
-  if (temperature < 32)  return 30;
-  if (temperature < 38)  return 65;
+  if (temperature < 0) return 85;
+  if (temperature < 5) return 65;
+  if (temperature < 10) return 40;
+  if (temperature < 15) return 15;
+
+  if (temperature < 28) return 0;
+  if (temperature < 32) return 20;
+  if (temperature < 36) return 45;
+  if (temperature < 40) return 70;
+
   return 100;
 }
 
 /**
- * Scores humidity risk (0–100).
- * High humidity impairs sweat evaporation, significantly raising exertion risk.
- * @param {number} humidity - Relative humidity (0–100)
+ * Scores humidity risk.
+ *
+ * @param {number} humidity - Relative humidity percentage
  * @returns {number}
  */
 function scoreHumidity(humidity) {
-  if (humidity < 30)  return 10;
-  if (humidity < 60)  return 0;
-  if (humidity < 75)  return 30;
-  if (humidity < 85)  return 60;
-  return 90;
-}
+  if (humidity < 30) return 15;
+  if (humidity < 60) return 0;
+  if (humidity < 70) return 15;
+  if (humidity < 80) return 35;
+  if (humidity < 90) return 60;
 
-/**
- * Scores UV index risk (0–100).
- * @param {number} uvIndex
- * @returns {number}
- */
-function scoreUV(uvIndex) {
-  if (uvIndex <= 2)  return 0;
-  if (uvIndex <= 5)  return 20;
-  if (uvIndex <= 7)  return 40;
-  if (uvIndex <= 10) return 65;
-  return 90;
-}
-
-/**
- * Scores wind speed risk (0–100).
- * Moderate wind can help cooling; very high wind is hazardous.
- * @param {number} windSpeed - Wind speed in km/h
- * @returns {number}
- */
-function scoreWind(windSpeed) {
-  if (windSpeed < 20)  return 0;
-  if (windSpeed < 40)  return 20;
-  if (windSpeed < 60)  return 50;
   return 85;
 }
 
 /**
- * Scores precipitation risk (0–100).
- * @param {number} precipitation - Precipitation in mm
+ * Scores UV-index risk.
+ *
+ * @param {number} uvIndex
+ * @returns {number}
+ */
+function scoreUV(uvIndex) {
+  if (uvIndex <= 2) return 0;
+  if (uvIndex <= 5) return 20;
+  if (uvIndex <= 7) return 45;
+  if (uvIndex <= 10) return 70;
+
+  return 95;
+}
+
+/**
+ * Scores wind risk using BOTH average wind speed and gust speed.
+ *
+ * Gusts are particularly important for hikers in exposed areas.
+ *
+ * @param {number} windSpeed - Average wind speed in km/h
+ * @param {number} windGusts - Wind gust speed in km/h
+ * @returns {number}
+ */
+function scoreWind(windSpeed = 0, windGusts = 0) {
+  const effectiveWind = Math.max(windSpeed, windGusts);
+
+  if (effectiveWind < 20) return 0;
+  if (effectiveWind < 30) return 15;
+  if (effectiveWind < 40) return 35;
+  if (effectiveWind < 50) return 55;
+  if (effectiveWind < 65) return 75;
+
+  return 95;
+}
+
+/**
+ * Scores precipitation risk.
+ *
+ * @param {number} precipitation - Current precipitation in mm
  * @returns {number}
  */
 function scorePrecipitation(precipitation) {
-  if (precipitation === 0)    return 0;
-  if (precipitation < 0.1)    return 5;
-  if (precipitation < 2)      return 20;
-  if (precipitation < 10)     return 55;
-  return 90;
+  if (precipitation <= 0) return 0;
+  if (precipitation < 0.1) return 10;
+  if (precipitation < 1) return 25;
+  if (precipitation < 2.5) return 40;
+  if (precipitation < 5) return 60;
+  if (precipitation < 10) return 80;
+
+  return 100;
+}
+
+/**
+ * Scores weather-condition risk.
+ *
+ * This handles situations where the WMO weather code itself
+ * indicates a hazardous condition such as fog, heavy rain,
+ * snow, or thunderstorms.
+ *
+ * @param {string} category
+ * @param {string} severity
+ * @returns {number}
+ */
+function scoreWeatherCondition(category = 'unknown', severity = 'unknown') {
+  // Thunderstorms are always treated as significant hazards.
+  if (category === 'thunderstorm') {
+    return 100;
+  }
+
+  // Weather category base risks.
+  const categoryBaseScores = {
+    clear: 0,
+    cloud: 0,
+    unknown: 10,
+
+    fog: 45,
+
+    rain: 40,
+
+    snow: 60,
+  };
+
+  const baseScore = categoryBaseScores[category] ?? 10;
+
+  // Severity can increase the category risk.
+  const severityBonus = {
+    none: 0,
+    low: 0,
+    moderate: 15,
+    high: 35,
+    very_high: 55,
+    unknown: 0,
+  };
+
+  const bonus = severityBonus[severity] ?? 0;
+
+  return Math.min(100, baseScore + bonus);
 }
 
 // ─────────────────────────────────────────────
@@ -105,84 +180,192 @@ function scorePrecipitation(precipitation) {
 // ─────────────────────────────────────────────
 
 /**
- * Calculates the overall safety score and determines risk level.
+ * Calculates the overall environmental safety score.
  *
- * @param {Object} weather - Normalised weather object
- * @param {number} weather.temperature
- * @param {number} weather.humidity
- * @param {number} weather.windSpeed
- * @param {number} weather.precipitation
- * @param {number} weather.uvIndex
- * @param {number} heatIndex - Calculated heat index in °C
+ * @param {Object} weather
+ * @param {number} heatIndex
  * @param {string} activity - 'hiking' | 'running'
- * @returns {SafetyResult}
+ *
+ * @returns {{
+ *   safetyScore: number,
+ *   riskLevel: string,
+ *   factorScores: Object,
+ *   primaryFactor: string,
+ *   contributingFactors: string[]
+ * }}
  */
-function calculateSafetyScore(weather, heatIndex, activity) {
-  const { temperature, humidity, windSpeed, precipitation, uvIndex } = weather;
+/**
+ * Applies minimum score floors for critical environmental hazards.
+ *
+ * A weighted average alone can hide a single dangerous condition.
+ * For example, extremely dangerous wind gusts or thunderstorms
+ * should never result in an overall LOW risk assessment.
+ */
+function applyCriticalHazardFloor(
+  safetyScore,
+  weather,
+  factorScores
+) {
+  let minimumScore = safetyScore;
 
-  // Individual risk scores
+  // Thunderstorms are a significant immediate outdoor hazard.
+  if (weather.weatherCategory === 'thunderstorm') {
+    minimumScore = Math.max(minimumScore, 55);
+  }
+
+  // Very dangerous sustained wind or gusts.
+  const effectiveWind = Math.max(
+    weather.windSpeed || 0,
+    weather.windGusts || 0
+  );
+
+  if (effectiveWind >= 65) {
+    minimumScore = Math.max(minimumScore, 30);
+  }
+
+  // Extreme heat index should not appear as a low/moderate condition.
+  if (factorScores.heatIndex >= 100) {
+    minimumScore = Math.max(minimumScore, 55);
+  }
+
+  // Extremely heavy precipitation.
+  if (factorScores.precipitation >= 100) {
+    minimumScore = Math.max(minimumScore, 30);
+  }
+
+  return Math.min(100, minimumScore);
+}
+
+function calculateSafetyScore(weather, heatIndex, activity) {
+  const activityFactors =
+    ACTIVITY_FACTORS[activity] || ACTIVITY_FACTORS.hiking;
+
+  // ── 1. Calculate raw individual risk scores ────────────────
+
   const factorScores = {
-    heatIndex:     scoreHeatIndex(heatIndex),
-    temperature:   scoreTemperature(temperature),
-    humidity:      scoreHumidity(humidity),
-    uvIndex:       scoreUV(uvIndex),
-    windSpeed:     scoreWind(windSpeed),
-    precipitation: scorePrecipitation(precipitation),
+    heatIndex: scoreHeatIndex(heatIndex),
+
+    temperature: scoreTemperature(weather.temperature),
+
+    humidity: scoreHumidity(weather.humidity),
+
+    uvIndex: scoreUV(weather.uvIndex),
+
+    wind: scoreWind(
+      weather.windSpeed,
+      weather.windGusts
+    ),
+
+    precipitation: scorePrecipitation(
+      weather.precipitation
+    ),
+
+    weatherCondition: scoreWeatherCondition(
+      weather.weatherCategory,
+      weather.weatherSeverity
+    ),
   };
 
-  // Weighted sum
-  const baseScore =
-    factorScores.heatIndex     * WEIGHTS.heatIndex +
-    factorScores.temperature   * WEIGHTS.temperature +
-    factorScores.humidity      * WEIGHTS.humidity +
-    factorScores.uvIndex       * WEIGHTS.uvIndex +
-    factorScores.windSpeed     * WEIGHTS.windSpeed +
-    factorScores.precipitation * WEIGHTS.precipitation;
+  // ── 2. Apply activity-specific adjustments ────────────────
 
-  // Activity multiplier (running = slightly higher risk under stress)
-  const multiplier = ACTIVITY_MULTIPLIERS[activity] || ACTIVITY_MULTIPLIERS.hiking;
-  const rawScore = baseScore * multiplier;
-  const safetyScore = Math.min(100, Math.round(rawScore));
+  const adjustedScores = {};
 
-  // Determine risk level
+  for (const factor of Object.keys(factorScores)) {
+    const multiplier = activityFactors[factor] || 1;
+
+    adjustedScores[factor] = Math.min(
+      100,
+      Math.round(factorScores[factor] * multiplier)
+    );
+  }
+
+  // ── 3. Calculate weighted contributions ───────────────────
+
+  const weightedContributions = {};
+
+  for (const factor of Object.keys(adjustedScores)) {
+    weightedContributions[factor] =
+      adjustedScores[factor] * WEIGHTS[factor];
+  }
+
+  // ── 4. Calculate final risk score ─────────────────────────
+
+  const rawScore = Object.values(
+    weightedContributions
+  ).reduce((total, value) => total + value, 0);
+
+  const weightedScore = Math.min(
+  100,
+  Math.round(rawScore)
+  );
+
+  const safetyScore = applyCriticalHazardFloor(
+    weightedScore,
+    weather,
+    factorScores
+  );
+
+  // ── 5. Determine risk level ───────────────────────────────
+
   const riskLevel = getRiskLevel(safetyScore);
 
-  // Identify primary contributing factor (weighted contribution)
-  const weightedContributions = {
-    heatIndex:     factorScores.heatIndex     * WEIGHTS.heatIndex,
-    temperature:   factorScores.temperature   * WEIGHTS.temperature,
-    humidity:      factorScores.humidity      * WEIGHTS.humidity,
-    uvIndex:       factorScores.uvIndex       * WEIGHTS.uvIndex,
-    windSpeed:     factorScores.windSpeed     * WEIGHTS.windSpeed,
-    precipitation: factorScores.precipitation * WEIGHTS.precipitation,
+  // ── 6. Sort factors by actual weighted contribution ───────
+
+  const sortedFactors = Object.entries(
+    weightedContributions
+  )
+    .sort(([, a], [, b]) => b - a)
+    .map(([factor]) => factor);
+
+  const primaryFactor = sortedFactors[0];
+
+  // Return up to 3 factors that meaningfully contributed.
+  const contributingFactors = sortedFactors
+    .filter((factor) => adjustedScores[factor] >= 15)
+    .slice(0, 3);
+
+  return {
+    safetyScore,
+    riskLevel,
+
+    // Raw scores are returned for transparency.
+    factorScores,
+
+    // Activity-adjusted scores can be useful for debugging/UI.
+    adjustedScores,
+
+    primaryFactor,
+    contributingFactors,
   };
-
-  const primaryFactor = Object.entries(weightedContributions)
-    .sort(([, a], [, b]) => b - a)[0][0];
-
-  return { safetyScore, riskLevel, factorScores, primaryFactor };
 }
 
 /**
- * Maps a numeric safety score to a risk level string.
+ * Maps a numeric score to a risk level.
+ *
  * @param {number} score
  * @returns {string}
  */
 function getRiskLevel(score) {
   for (const { max, level } of RISK_LEVELS) {
-    if (score <= max) return level;
+    if (score <= max) {
+      return level;
+    }
   }
+
   return 'VERY_HIGH';
 }
 
 module.exports = {
   calculateSafetyScore,
   getRiskLevel,
-  // Export individual scorers for unit testing with artificial values:
+
+  // Individual scorers exported for unit testing.
   scoreHeatIndex,
   scoreTemperature,
   scoreHumidity,
   scoreUV,
   scoreWind,
   scorePrecipitation,
+  scoreWeatherCondition,
 };
+
